@@ -1,0 +1,73 @@
+import os
+import json
+import csv
+
+def find_json_files(root_dir):
+    """
+    Function to find all the json files in a directory and its subdirectories.
+
+    Args:
+    root_dir (str): the root directory to start the search from.
+
+    Returns:
+    A list of paths to all the json files found.
+    """
+    json_files = []
+    for root, dirs, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith('.json'):
+                json_files.append(os.path.join(root, file))
+    return json_files
+
+
+def load_json_file(file_path):
+    """
+    Function to load and parse a json file.
+
+    Args:
+    file_path (str): the path to the json file.
+
+    Returns:
+    A Python object representing the parsed json data.
+    """
+    with open(file_path, 'r') as f:
+        json_data = json.load(f)
+    return json_data
+
+def flatten_json(json_data, prefix=''):
+    """
+    Function to flatten out a json object.
+
+    Args:
+    json_data (dict): the json object to flatten out.
+    prefix (str): a prefix to append to the keys of the flattened out dictionary.
+
+    Returns:
+    A flattened out dictionary representing the json data.
+    """
+    flattened = {}
+    for key, value in json_data.items():
+        new_key = prefix + '.' + key if prefix else key
+        if isinstance(value, dict):
+            flattened.update(flatten_json(value, new_key))
+        elif isinstance(value, list):
+            for i, item in enumerate(value):
+                flattened.update(flatten_json(item, f'{new_key}[{i}]'))
+        else:
+            flattened[new_key] = value
+    return flattened
+
+
+def write_csv_file(file_path, data):
+    """
+    Function to write a csv file.
+
+    Args:
+    file_path (str): the path to the csv file.
+    data (list): a list of dictionaries representing the rows of the csv file.
+    """
+    with open(file_path, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=data[0].keys())
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
