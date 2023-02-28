@@ -1,0 +1,34 @@
+import os
+import gzip
+import boto3
+
+# Set up AWS credentials
+os.environ['AWS_ACCESS_KEY_ID'] = 'your_access_key'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'your_secret_key'
+
+# Connect to S3 client
+s3 = boto3.client('s3')
+
+# Download wet.paths.gz from commoncrawl bucket
+bucket_name = 'commoncrawl'
+key = 'crawl-data/CC-MAIN-2022-05/wet.paths.gz'
+local_file = 'wet.paths.gz'
+s3.download_file(bucket_name, key, local_file)
+
+# Extract file contents
+with gzip.open(local_file, 'rb') as f:
+    file_content = f.read().decode('utf-8')
+
+# Get first URI from file_content
+uri = file_content.split('\n')[0]
+
+# Download web data file from S3
+bucket_name = 'commoncrawl'
+key = uri.split('s3://commoncrawl/')[1]
+local_file = key.split('/')[-1]
+s3.download_file(bucket_name, key, local_file)
+
+# Print file contents
+with open(local_file, 'r') as f:
+    for line in f:
+        print(line.strip())
